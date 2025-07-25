@@ -3,20 +3,21 @@ import os
 from datetime import datetime
 import psycopg2
 import pandas as pd
+import xlsxwriter
 
 # ----------------------------- CONFIGURACIÓN GLOBAL -----------------------------
 
 # Parámetros de conexión (MODIFICA AQUÍ)
 DB_PARAMS = {
-    'host': 'localhost',
-    'port': 5432,
-    'dbname': 'catastro',
-    'user': 'postgres',
-    'password': 'tu_clave'
+    "host": "localhost",
+    "port": "5432",
+    "dbname": "mi_basededatos",
+    "user": "mi_usuario",
+    "password": "mi_contraseña"
 }
 
 # Lista de esquemas a analizar (MODIFICA AQUÍ)
-SCHEMAS = ['catastro1', 'catastro2']
+SCHEMAS = ['esquema1','esquema2']
 
 # Ruta a la carpeta que contiene los archivos .sql (MODIFICA AQUÍ)
 SQL_FOLDER = './consultas_sql'
@@ -78,6 +79,10 @@ def export_to_excel(results_by_schema):
         summary_data = []
 
         for sheet_name, df in queries_dict.items():
+            # ✅ Corrección: eliminar timezone si existe
+            for col in df.select_dtypes(include=["datetimetz"]).columns:
+                df[col] = df[col].dt.tz_localize(None)
+
             df.to_excel(writer, sheet_name=sheet_name[:31], index=False)  # Excel limita nombres de hoja a 31 caracteres
             summary_data.append({
                 "Consulta": sheet_name,
