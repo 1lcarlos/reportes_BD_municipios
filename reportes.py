@@ -9,15 +9,20 @@ import xlsxwriter
 
 # Parámetros de conexión (MODIFICA AQUÍ)
 DB_PARAMS = {
-    "host": "localhost",
-    "port": "5432",
-    "dbname": "mi_basededatos",
-    "user": "mi_usuario",
-    "password": "mi_contraseña"
+    'host': 'localhost',
+    'port': 5432,
+    'dbname': 'ACC_2025',
+    'user': 'postgres',
+    'password': 'acc123'
 }
 
 # Lista de esquemas a analizar (MODIFICA AQUÍ)
-SCHEMAS = ['esquema1','esquema2']
+SCHEMAS = ['cun25019','cun25035','cun25040', 'cun25053', 'cun25095', 'cun25123', 'cun25151', 'cun25154', 'cun25168', 'cun25178', 'cun25200', 'cun25224', 'cun25245', 
+          'cun25258', 'cun25260', 'cun25269','cun25279', 'cun25281', 'cun25288', 'cun25293', 'cun25297', 'cun25299', 'cun25312', 'cun25317', 'cun25320',
+          'cun25326','cun25328', 'cun25335', 'cun25368', 'cun25372', 'cun25386', 'cun25394', 'cun25398', 'cun25407', 'cun25436', 'cun25438', 'cun25483', 'cun25486', 'cun25489', 
+          'cun25491', 'cun25506', 'cun25518', 'cun25524', 'cun25530', 'cun25535', 'cun25580', 'cun25592', 'cun25594', 'cun25596','cun25599','cun25645', 'cun25653', 
+          'cun25662', 'cun25718', 'cun25743', 'cun25769', 'cun25777', 'cun25779', 'cun25805','cun25807','cun25815', 'cun25781', 'cun25793', 'cun25797', 'cun25839', 
+         'cun25841', 'cun25843', 'cun25845', 'cun25862', 'cun25867', 'cun25871', 'cun25873', 'cun25875', 'cun25878', 'cun25885', 'cun25898']
 
 # Ruta a la carpeta que contiene los archivos .sql (MODIFICA AQUÍ)
 SQL_FOLDER = './consultas_sql'
@@ -60,7 +65,7 @@ def execute_queries_per_schema(conn, schemas, queries):
         schema_results = {}
         for query_name, query_template in queries.items():
             try:
-                full_query = f"SET search_path TO {schema}; {query_template}"
+                full_query = f"SET search_path TO public, {schema}; {query_template}"
                 df = pd.read_sql(full_query, conn)
                 schema_results[query_name] = df
                 logging.info(f"Consulta '{query_name}' ejecutada con éxito en esquema '{schema}'.")
