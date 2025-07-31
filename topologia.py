@@ -14,7 +14,7 @@ DB_PARAMS = {
     'password': 'acc123'
 }
 
-SCHEMAS = ['cun25797', 'cun25489', 'cun25436']  # Lista de esquemas a procesar
+SCHEMAS = ['cun25797','cun25489', 'cun25436']  # Lista de esquemas a procesar
 SQL_FILE = "consultas_sql/sobreposicion_terrenos.sql"
 OUTPUT_FOLDER = "shapefiles_generados"
 LOG_FILE = "log_topologia/log_proceso.txt"
