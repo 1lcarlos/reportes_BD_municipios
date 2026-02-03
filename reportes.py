@@ -10,68 +10,27 @@ import xlsxwriter
 # Parámetros de conexión (MODIFICA AQUÍ)
 DB_PARAMS = {
     "host": "localhost",
-    "port": 5432,
-    "dbname": "acc_noviembre_2025",
+    "port": 5433,
+    "dbname": "ladm_col",
     "user": "postgres",
-    "password": "******",
+    "password": "****",
 }
 
 # Lista de esquemas a analizar (MODIFICA AQUÍ)
-SCHEMAS = [
-    "cun25873",
-    "cun25368",
-    "cun25483",
-    "cun25019",
-    "cun25398",
-    "cun25718",
-    "cun25297",
-    "cun25293",
-    "cun25299",
-    "cun25372",
-    "cun25839",
-    "cun25095",
-    "cun25328",
-    "cun25662",
-    "cun25867",
-    "cun25438",
-    "cun25530",
-    "cun25151",
-    "cun25178",
-    "cun25279",
-    "cun25281",
-    "cun25335",
-    "cun25594",
-    "cun25841",
-    "cun25845",
-    "cun25258",
-    "cun25394",
-    "cun25518",
-    "cun25653",
-    "cun25871",
-    "cun25885",
-    "cun25486",
-    "cun25260",
-    "cun25898",
-    "cun25053",
-    "cun25312",
-    "cun25535",
-    "cun25743",
-    "cun25506",
-    "cun25123",
-    "cun25245",
-    "cun25386",
-    "cun25797",
-    "cun25878",
-    "cun25154",
-    "cun25224",
-    "cun25288",
-    "cun25317",
-    "cun25407",
-    "cun25779",
-]
+SCHEMAS = ["lev_manta_entrega_20260114"]
 
 # Ruta a la carpeta que contiene los archivos .sql (MODIFICA AQUÍ)
 SQL_FOLDER = "./consultas_sql"
+
+# Configuración de formato de salida (MODIFICA AQUÍ)
+# Opciones: "excel", "csv", "both"
+OUTPUT_FORMAT = "excel"
+
+# Configuración de consultas a ejecutar (MODIFICA AQUÍ)
+# Opciones: "all" para ejecutar todas las consultas, o lista con nombres específicos
+# Ejemplo: ["consulta1", "consulta2"] o "all"
+# IMPORTANTE: No incluir la extensión .sql en los nombres
+QUERIES_TO_RUN = "all"
 
 # Obtener timestamp para nombres de archivos únicos
 timestamp = datetime.now().strftime("%d%m%Y_%H%M%S")
@@ -136,14 +95,57 @@ def execute_queries_per_schema(conn, schemas, queries):
     return results_by_schema
 
 
+# ----------------------------- FUNCIÓN: FILTRAR CONSULTAS -----------------------------
+def filter_queries(queries_dict):
+    """Filtra las consultas según la configuración QUERIES_TO_RUN"""
+    if QUERIES_TO_RUN == "all":
+        return queries_dict
+    elif isinstance(QUERIES_TO_RUN, list):
+        return {k: v for k, v in queries_dict.items() if k in QUERIES_TO_RUN}
+    else:
+        logging.warning(
+            f"Configuración QUERIES_TO_RUN inválida: {QUERIES_TO_RUN}. Usando todas las consultas."
+        )
+        return queries_dict
+
+
+# ----------------------------- FUNCIÓN: EXPORTAR A CSV -----------------------------
+def export_to_csv(results_by_schema):
+    """Exporta cada consulta de cada esquema a un archivo CSV individual"""
+    for schema, queries_dict in results_by_schema.items():
+        filtered_queries = filter_queries(queries_dict)
+
+        for query_name, df in filtered_queries.items():
+            if df.empty:
+                logging.warning(
+                    f"Consulta '{query_name}' en esquema '{schema}' está vacía. No se generará CSV."
+                )
+                continue
+
+            # Eliminar timezone si existe
+            for col in df.select_dtypes(include=["datetimetz"]).columns:
+                df[col] = df[col].dt.tz_localize(None)
+
+            csv_name = f"reporte_{schema}_{query_name}_{timestamp}.csv"
+            df.to_csv(csv_name, index=False, sep=";", encoding="utf-8")
+
+            logging.info(
+                f"Archivo CSV '{csv_name}' generado para consulta '{query_name}' en esquema '{schema}'."
+            )
+            print(f"✅ Archivo CSV generado: {csv_name}")
+
+
 # ----------------------------- FUNCIÓN: EXPORTAR A EXCEL -----------------------------
 def export_to_excel(results_by_schema):
+    """Exporta todas las consultas de cada esquema a un archivo Excel con múltiples hojas"""
     for schema, queries_dict in results_by_schema.items():
+        filtered_queries = filter_queries(queries_dict)
+
         excel_name = f"reporte_{schema}_{timestamp}.xlsx"
         writer = pd.ExcelWriter(excel_name, engine="xlsxwriter")
         summary_data = []
 
-        for sheet_name, df in queries_dict.items():
+        for sheet_name, df in filtered_queries.items():
             # ✅ Corrección: eliminar timezone si existe
             for col in df.select_dtypes(include=["datetimetz"]).columns:
                 df[col] = df[col].dt.tz_localize(None)
@@ -163,17 +165,43 @@ def export_to_excel(results_by_schema):
         logging.info(
             f"Archivo Excel '{excel_name}' generado para el esquema '{schema}'."
         )
-        print(f"✅ Archivo generado: {excel_name}")
+        print(f"✅ Archivo Excel generado: {excel_name}")
+
+
+# ----------------------------- FUNCIÓN: EXPORTAR RESULTADOS -----------------------------
+def export_results(results_by_schema):
+    """Coordina la exportación según la configuración OUTPUT_FORMAT"""
+    if OUTPUT_FORMAT == "excel":
+        logging.info("Exportando solo a formato Excel...")
+        export_to_excel(results_by_schema)
+    elif OUTPUT_FORMAT == "csv":
+        logging.info("Exportando solo a formato CSV...")
+        export_to_csv(results_by_schema)
+    elif OUTPUT_FORMAT == "both":
+        logging.info("Exportando a ambos formatos (Excel y CSV)...")
+        export_to_excel(results_by_schema)
+        export_to_csv(results_by_schema)
+    else:
+        logging.error(
+            f"Formato de salida no válido: '{OUTPUT_FORMAT}'. Use 'excel', 'csv' o 'both'."
+        )
+        print(
+            f"❌ Error: Formato '{OUTPUT_FORMAT}' no válido. Use 'excel', 'csv' o 'both'."
+        )
 
 
 # ----------------------------- EJECUCIÓN PRINCIPAL -----------------------------
 def main():
     try:
         logging.info("Iniciando proceso de auditoría")
+        print(f"⚙️  Configuración:")
+        print(f"   - Formato de salida: {OUTPUT_FORMAT}")
+        print(f"   - Consultas a ejecutar: {QUERIES_TO_RUN}")
+
         conn = connect_to_db(DB_PARAMS)
         queries = load_sql_queries_from_folder(SQL_FOLDER)
         results = execute_queries_per_schema(conn, SCHEMAS, queries)
-        export_to_excel(results)
+        export_results(results)
         conn.close()
         logging.info("Proceso finalizado correctamente.")
         print("✅ Proceso completado con éxito.")
