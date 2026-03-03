@@ -1,6 +1,5 @@
 *.xlsx
 *.csv
-/consultas_sql
 # Ignorar logs .txt pero no requirements.txt
 *.txt
 !requirements.txt
