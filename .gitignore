@@ -1,7 +1,25 @@
 *.xlsx
+*.csv
 /consultas_sql
+# Ignorar logs .txt pero no requirements.txt
 *.txt
+!requirements.txt
 /log_topologia
 /shapefiles_generados
 *.zip
 /.vscode/settings.json
+
+# Archivos de configuración con datos sensibles
+reportes_config.json
+
+# Cache de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Carpeta de Claude
+.claude/
+
+# Archivos temporales
+~$*
+*.tmp
