@@ -1,15 +1,23 @@
+# Archivos generados (reportes, logs, temporales)
+archivos_generados/
 *.xlsx
 *.csv
-# Ignorar logs .txt pero no requirements.txt
 *.txt
 !requirements.txt
-/log_topologia
-/shapefiles_generados
 *.zip
-/.vscode/settings.json
+~$*
+
+# Carpetas de reportes antiguos
+/Reportes_*/
+/reportes_*/
+/log_topologia/
+/shapefiles_generados/
 
 # Archivos de configuración con datos sensibles
 reportes_config.json
+
+# IDE
+/.vscode/settings.json
 
 # Cache de Python
 __pycache__/
@@ -20,5 +28,4 @@ __pycache__/
 .claude/
 
 # Archivos temporales
-~$*
 *.tmp

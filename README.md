@@ -177,24 +177,27 @@ Esta pestaña permite ejecutar la validación y ver el progreso en tiempo real.
 Reportes_Base_Datos_Municipios/
 │
 ├── reportes_gui.py          # Aplicación principal (interfaz gráfica)
-├── reportes.py               # Script original (línea de comandos)
-├── requirements.txt          # Dependencias de Python
-├── reportes_config.json      # Configuración guardada (se genera automáticamente)
+├── reportes.py              # Script alternativo (línea de comandos)
+├── topologia.py             # Módulo de topología (en desarrollo)
+├── requirements.txt         # Dependencias de Python
+├── reportes_config.json     # Configuración guardada (se genera automáticamente)
 │
-├── consultas_sql/            # Carpeta de reglas de validación
+├── consultas_sql/           # Carpeta de reglas de validación
 │   ├── regla_01_xxx.sql
 │   ├── regla_02_xxx.sql
 │   ├── ...
-│   ├── administrativas/      # Subcarpeta de reglas
+│   ├── administrativas/     # Subcarpeta de reglas
 │   │   └── *.sql
 │   ├── fisicas/
 │   │   └── *.sql
 │   ├── juridicas/
 │   │   └── *.sql
-│   └── economicas/
+│   ├── economicas/
+│   │   └── *.sql
+│   └── esconder/            # Reglas en desarrollo (no se cargan en la aplicación)
 │       └── *.sql
 │
-└── [reportes generados]      # Archivos de salida
+└── archivos_generados/      # Reportes, logs y archivos de salida (no versionado)
 ```
 
 ### Organización de Reglas SQL
@@ -205,6 +208,8 @@ Las reglas pueden organizarse de dos formas:
 2. **En subcarpetas:** Organizadas por categoría (administrativas, físicas, jurídicas, etc.)
 
 La aplicación carga automáticamente las reglas de ambas ubicaciones.
+
+> **Nota:** La subcarpeta `esconder/` dentro de `consultas_sql/` contiene reglas en desarrollo o experimentales que **no se cargan** automáticamente en la aplicación.
 
 ---
 
@@ -289,6 +294,8 @@ Este error indica que una consulta SQL hace referencia a una columna que no exis
 - Los nombres de hojas Excel se truncan a 31 caracteres (límite de Excel)
 - Las consultas vacías (sin resultados) indican que no hay errores para esa regla
 - El proceso puede detenerse en cualquier momento con el botón "Detener"
+- `reportes.py` es un script alternativo de línea de comandos. Para usarlo, edite las variables de configuración al inicio del archivo (credenciales, esquemas, etc.) y ejecútelo con `python reportes.py`
+- `topologia.py` es un módulo en desarrollo para validaciones topológicas. Es funcionalidad separada y no afecta el flujo principal de reportes
 
 ---
 

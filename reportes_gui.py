@@ -13,10 +13,19 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
+import re
+
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine, text
 import xlsxwriter
+
+
+def validate_identifier(name):
+    """Valida que un nombre de esquema/tabla solo contenga caracteres seguros."""
+    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', name):
+        raise ValueError(f"Nombre de identificador no válido: '{name}'")
+    return name
 
 # ----------------------------- CONFIGURACIÓN -----------------------------
 
@@ -125,7 +134,7 @@ def load_sql_queries_from_folder(folder_path, include_subfolders=True):
     # Cargar archivos .sql de subdirectorios
     if include_subfolders:
         for subdir in folder.iterdir():
-            if subdir.is_dir() and not subdir.name.startswith("."):
+            if subdir.is_dir() and not subdir.name.startswith(".") and subdir.name != "esconder":
                 subdir_queries = {}
                 for sql_file in subdir.glob("*.sql"):
                     with open(sql_file, "r", encoding="utf-8") as f:
@@ -153,7 +162,7 @@ def get_query_tree_structure(folder_path):
 
     # Archivos en subdirectorios
     for subdir in sorted(folder.iterdir()):
-        if subdir.is_dir() and not subdir.name.startswith("."):
+        if subdir.is_dir() and not subdir.name.startswith(".") and subdir.name != "esconder":
             for sql_file in sorted(subdir.glob("*.sql")):
                 structure.append((subdir.name, sql_file.stem, str(sql_file)))
 
@@ -764,8 +773,9 @@ class ReportesApp:
                     try:
                         # Usar conexión con search_path configurado
                         with engine.connect() as conn:
-                            # Establecer search_path primero
-                            conn.execute(text(f"SET search_path TO {schema}, public"))
+                            # Establecer search_path (nombre sanitizado)
+                            safe_schema = validate_identifier(schema)
+                            conn.execute(text(f"SET search_path TO {safe_schema}, public"))
                             conn.commit()
                             # Ejecutar la consulta usando la conexión raw de DBAPI
                             df = pd.read_sql(query_template, conn.connection)

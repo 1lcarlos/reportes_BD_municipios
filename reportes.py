@@ -1,23 +1,31 @@
 import logging
 import os
+import re
 from datetime import datetime
 import psycopg2
 import pandas as pd
 import xlsxwriter
 
+
+def validate_identifier(name):
+    """Valida que un nombre de esquema/tabla solo contenga caracteres seguros."""
+    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', name):
+        raise ValueError(f"Nombre de identificador no válido: '{name}'")
+    return name
+
 # ----------------------------- CONFIGURACIÓN GLOBAL -----------------------------
 
 # Parámetros de conexión (MODIFICA AQUÍ)
 DB_PARAMS = {
-    "host": "localhost",
-    "port": 5433,
-    "dbname": "ladm_col",
-    "user": "postgres",
-    "password": "****",
+    "host": "TU_HOST",           # Ejemplo: "localhost" o "192.168.1.100"
+    "port": 5432,                # Puerto de PostgreSQL (por defecto: 5432)
+    "dbname": "TU_BASE_DE_DATOS",  # Nombre de la base de datos
+    "user": "TU_USUARIO",       # Usuario de PostgreSQL
+    "password": "TU_CONTRASEÑA", # Contraseña del usuario
 }
 
 # Lista de esquemas a analizar (MODIFICA AQUÍ)
-SCHEMAS = ["lev_manta_entrega_20260114"]
+SCHEMAS = ["nombre_esquema_1"]
 
 # Ruta a la carpeta que contiene los archivos .sql (MODIFICA AQUÍ)
 SQL_FOLDER = "./consultas_sql"
@@ -79,7 +87,8 @@ def execute_queries_per_schema(conn, schemas, queries):
         schema_results = {}
         for query_name, query_template in queries.items():
             try:
-                full_query = f"SET search_path TO public, {schema}; {query_template}"
+                safe_schema = validate_identifier(schema)
+                full_query = f"SET search_path TO public, {safe_schema}; {query_template}"
                 df = pd.read_sql(full_query, conn)
                 schema_results[query_name] = df
                 logging.info(
