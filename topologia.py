@@ -7,14 +7,14 @@ from sqlalchemy import create_engine
 
 # --- Configuración base ---
 DB_PARAMS = {
-    'host': 'localhost',
-    'port': 5432,
-    'dbname': 'ACC_2025',
-    'user': 'postgres',
-    'password': 'acc123'
+    "host": "localhost",
+    "port": 5432,
+    "dbname": "ACC_2025",
+    "user": "postgres",
+    "password": "****",
 }
 
-SCHEMAS = ['cun25797','cun25489', 'cun25436']  # Lista de esquemas a procesar
+SCHEMAS = ["cun25797", "cun25489", "cun25436"]  # Lista de esquemas a procesar
 SQL_FILE = "consultas_sql/sobreposicion_terrenos.sql"
 OUTPUT_FOLDER = "shapefiles_generados"
 LOG_FILE = "log_topologia/log_proceso.txt"
@@ -45,11 +45,15 @@ def obtener_sobreposiciones(engine, sql_path, schema):
         with open(sql_path, "r", encoding="utf-8") as file:
             query = file.read()
 
-        query = f"SET search_path TO {schema}, public; " + query.replace("{{schema}}", schema)
+        query = f"SET search_path TO {schema}, public; " + query.replace(
+            "{{schema}}", schema
+        )
 
         gdf = gpd.read_postgis(query, engine, geom_col="geometria")
         gdf = gdf.set_crs(epsg=9377)
-        log_mensaje(f"Consulta ejecutada correctamente en el esquema '{schema}'. Registros encontrados: {len(gdf)}.")
+        log_mensaje(
+            f"Consulta ejecutada correctamente en el esquema '{schema}'. Registros encontrados: {len(gdf)}."
+        )
         return gdf
 
     except Exception as e:
@@ -64,20 +68,28 @@ def exportar_shapefile_por_tipo(gdf, schema, output_folder):
         os.makedirs(output_folder, exist_ok=True)
 
         # Filtrar polígonos y líneas
-        gdf_pol = gdf[gdf.geometry.type.isin(['Polygon', 'MultiPolygon'])]
-        gdf_lin = gdf[gdf.geometry.type.isin(['LineString', 'MultiLineString'])]
+        gdf_pol = gdf[gdf.geometry.type.isin(["Polygon", "MultiPolygon"])]
+        gdf_lin = gdf[gdf.geometry.type.isin(["LineString", "MultiLineString"])]
 
         rutas_exportadas = []
 
         if not gdf_pol.empty:
-            base_pol = os.path.join(output_folder, f"{schema}_sobreposicionP_{timestamp}")
-            gdf_pol.to_file(f"{base_pol}.shp", driver='ESRI Shapefile', encoding="utf-8")
+            base_pol = os.path.join(
+                output_folder, f"{schema}_sobreposicionP_{timestamp}"
+            )
+            gdf_pol.to_file(
+                f"{base_pol}.shp", driver="ESRI Shapefile", encoding="utf-8"
+            )
             log_mensaje(f"Shapefile de POLÍGONOS exportado: {base_pol}.shp")
             rutas_exportadas.append(base_pol)
 
         if not gdf_lin.empty:
-            base_lin = os.path.join(output_folder, f"{schema}_sobreposicionL_{timestamp}")
-            gdf_lin.to_file(f"{base_lin}.shp", driver='ESRI Shapefile', encoding="utf-8")
+            base_lin = os.path.join(
+                output_folder, f"{schema}_sobreposicionL_{timestamp}"
+            )
+            gdf_lin.to_file(
+                f"{base_lin}.shp", driver="ESRI Shapefile", encoding="utf-8"
+            )
             log_mensaje(f"Shapefile de LÍNEAS exportado: {base_lin}.shp")
             rutas_exportadas.append(base_lin)
 
@@ -92,8 +104,8 @@ def exportar_shapefile_por_tipo(gdf, schema, output_folder):
 def comprimir_shapefile(filepath_base):
     try:
         zip_path = f"{filepath_base}.zip"
-        with zipfile.ZipFile(zip_path, 'w') as zipf:
-            for ext in ['.shp', '.shx', '.dbf', '.prj', '.cpg']:
+        with zipfile.ZipFile(zip_path, "w") as zipf:
+            for ext in [".shp", ".shx", ".dbf", ".prj", ".cpg"]:
                 file = filepath_base + ext
                 if os.path.exists(file):
                     zipf.write(file, os.path.basename(file))
@@ -114,7 +126,9 @@ def procesar_esquemas():
             for ruta in rutas:
                 comprimir_shapefile(ruta)
         else:
-            log_mensaje(f"No se generó shapefile para el esquema '{schema}' (resultado vacío o error).")
+            log_mensaje(
+                f"No se generó shapefile para el esquema '{schema}' (resultado vacío o error)."
+            )
 
 
 # --- Ejecutar si se corre como script principal ---
