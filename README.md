@@ -61,14 +61,13 @@ Esto instalará las siguientes librerías:
 
 ## Inicio Rápido
 
-1. Abra una terminal en la carpeta del proyecto
-2. Ejecute el comando:
+**Haga doble clic en el archivo `Abrir_Reportes.bat`** dentro de la carpeta del proyecto. Esto abrirá la interfaz gráfica directamente, sin necesidad de usar la terminal.
+
+**Alternativa desde terminal:** si prefiere usar la línea de comandos, navegue a la carpeta del proyecto y ejecute:
 
 ```
 python reportes_gui.py
 ```
-
-3. Se abrirá la interfaz gráfica de la aplicación
 
 ---
 
